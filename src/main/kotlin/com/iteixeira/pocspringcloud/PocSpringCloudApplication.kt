@@ -7,6 +7,7 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -15,6 +16,7 @@ import org.springframework.cloud.aws.messaging.config.annotation.NotificationMes
 import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate
 import org.springframework.cloud.aws.messaging.listener.SqsMessageDeletionPolicy
 import org.springframework.cloud.aws.messaging.listener.annotation.SqsListener
+import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -26,11 +28,19 @@ import org.springframework.web.bind.annotation.RestController
 
 val logger: Logger = LoggerFactory.getLogger("PocSpring_Cloud")
 
+@EnableFeignClients
 @SpringBootApplication
 class PocSpringCloudApplication
 
 fun main(args: Array<String>) {
     runApplication<PocSpringCloudApplication>(*args)
+}
+
+@Configuration
+class OkHttpConfig{
+
+    //fun client():Okhttpclie
+
 }
 
 data class CustomerApi(
@@ -60,11 +70,16 @@ class SQSConfig(
 }
 
 @Component
-class CustomerApiConsumer {
+class CustomerApiConsumer (
+        @Autowired val customerBFFHttp: CustomerBFFHttp,
+        ){
 
     @SqsListener(value = ["customer-register"], deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     fun listenerNewCustomer(@NotificationMessage customer: CustomerApi) {
         logger.info("Received SQS: {}", customer)
+        val response = customerBFFHttp.confirm(customer)
+        logger.info("Confirmation sent to BFF: {}", customer)
+        logger.info("Confirmation response of BFF: {}", response)
     }
 }
 

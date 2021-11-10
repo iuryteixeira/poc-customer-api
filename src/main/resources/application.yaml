@@ -20,3 +20,8 @@ cloud:
       secret-key: ${SECRET_KEY}
     sqs:
       customer-register: ${CUSTOMER_QUEUE}
+
+customer-bff:
+  url: ${CUSTOMER_BFF_URL}
+  endpoints:
+    register-confirm: ${ENDPOINT_REGISTER_CONFIRM}
